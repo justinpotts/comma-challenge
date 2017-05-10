@@ -6,9 +6,9 @@ from __future__ import print_function
 from sklearn.naive_bayes import GaussianNB
 import numpy as np
 import cv2
-import video
 from common import anorm2, draw_str
 from time import clock
+from os import sys
 
 lk_params = dict( winSize  = (15, 15),
                   maxLevel = 2,
@@ -85,28 +85,30 @@ class App:
 
 def main():
     # grab values from args
-    training_video = sys.argv[1]
-    training_frames = int(sys.argv[2])
-    test_video = sys.argv[3]
-    test_frames = int(sys.argv[4])
-
-    # grab training data from
-    speeds = []
-    with open('train.txt') as f:
-        speeds = f.readlines()
-        # multiply each speed by 1000000 because np.array doesn't support floats - maintains accuracy of decimals
-        speeds = [int(float(x.strip())*1000000) for x in content]
-    speeds = content[:len(mvmts)]
+    training_file = sys.argv[1]
+    training_video = sys.argv[2]
+    training_frames = int(sys.argv[3])
+    test_video = sys.argv[4]
+    test_frames = int(sys.argv[5])
 
     # position changes (movements) from training video
     training_mvmts = App(training_video).run(training_frames)
 
-    # get the average position change from mvmts (1 average / 1 frame)
+    # get the average position change from training_mvmts (1 average / 1 frame)
     averages = []
-    for sum_set in mvmts:
+    for sum_set in training_mvmts:
         avg = []
         avg.append(sum(sum_set)/len(sum_set))
         averages.append(avg)
+
+    # grab training data from
+    speeds = []
+    with open(training_file) as f:
+        data = f.readlines()
+        # multiply each speed by 1000000 because np.array doesn't support floats - maintains accuracy of decimals
+        data = [int(float(x.strip())*1000000) for x in data]
+        speeds = data
+    speeds = speeds[:len(training_mvmts)]
 
     # create naive bayes model from sklearn using optical flow averages and speed data
     x = np.array(averages)
@@ -127,7 +129,7 @@ def main():
 
     predicted= model.predict(averages)
     for speed in predicted:
-        # speed/1000000.0 to reverse *1000000 from earlier because np.array doesn't support floats - maintains accuracy of decimals
+        # divide by 1000000.0 to reverse *1000000 from earlier because np.array doesn't support floats - maintains accuracy of decimals
         print (speed/1000000.0)
 
 
