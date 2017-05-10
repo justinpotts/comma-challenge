@@ -78,7 +78,7 @@ class App:
             cv2.imshow('lk_track', vis)
             ch = cv2.waitKey(1)
 
-            # run as long as we have more frames (-1 so we don't go over)
+            # run as long as we have more frames (frames-1 to make sure we stay in bounds)
             if len(mvmts) == frames-1:
                 return mvmts
 
@@ -95,11 +95,11 @@ def main():
     training_mvmts = App(training_video).run(training_frames)
 
     # get the average position change from training_mvmts (1 average / 1 frame)
-    averages = []
+    training_averages = []
     for sum_set in training_mvmts:
         avg = []
         avg.append(sum(sum_set)/len(sum_set))
-        averages.append(avg)
+        training_averages.append(avg)
 
     # grab training data from
     speeds = []
@@ -122,15 +122,16 @@ def main():
     # position changes (movements) from test video
     test_mvmts = App(test_video).run(test_frames)
 
+    test_averages = []
     for sum_set in test_mvmts:
         avg = []
         avg.append(sum(sum_set)/len(sum_set))
-        averages.append(avg)
+        test_averages.append(avg)
 
-    predicted= model.predict(averages)
+    predicted= model.predict(test_averages)
     for speed in predicted:
         # divide by 1000000.0 to reverse *1000000 from earlier because np.array doesn't support floats - maintains accuracy of decimals
-        print (speed/1000000.0)
+        print(speed/1000000.0)
 
 
 if __name__ == '__main__':
