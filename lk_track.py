@@ -111,7 +111,7 @@ def main():
     speeds = speeds[:len(training_mvmts)]
 
     # create naive bayes model from sklearn using optical flow averages and speed data
-    x = np.array(averages)
+    x = np.array(training_averages)
     y = np.array(speeds)
 
     model = GaussianNB()
